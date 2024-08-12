@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>横向滚动打字游戏</title>
+</head>
+
+<body class="bg-gray-900 text-white">
+  <div class="fixed top-4 right-4 text-2xl">
+    分数: <span id="score">0</span>
+  </div>
+  <div id="game" class="h-screen w-screen overflow-hidden relative">
+    <div id="player" class="absolute bottom-10 left-10 w-8 h-8 bg-blue-500"></div>
+  </div>
+  <div id="word-input" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black p-4 rounded hidden">
+    <input type="text" id="typed-word" class="border border-gray-300 rounded px-2 py-1 mb-2 w-full" />
+    <button id="submit-word" class="bg-blue-500 text-white px-4 py-2 rounded">
+      提交
+    </button>
+  </div>
+  <script>
+    const words = [
+      '常',
+      '记',
+      '溪',
+      '亭',
+      '日',
+      '暮',
+      '沉',
+      '醉',
+      '不',
+      '知',
+      '归',
+      '路',
+      '兴',
+      '尽',
+      '晚',
+      '回',
+      '舟',
+      '误',
+      '入',
+      '藕',
+      '花',
+      '深',
+      '处',
+      '争',
+      '渡',
+      '惊',
+      '起',
+      '滩',
+      '鸥',
+      '鹭',
+      '李',
+      '清',
+      '照',
+      '如',
+      '梦',
+      '令',
+      '宋',
+      '朝',
+      '常记',
+      '溪亭',
+      '日暮',
+      '沉醉',
+      '不知',
+      '归路',
+      '兴尽',
+      '晚回舟',
+      '误入',
+      '藕花',
+      '深处',
+      '争渡·',
+      '惊起',
+      '一滩',
+      '鸥鹭',
+      '李清照',
+      '宋朝',
+      '女词人',
+    ];
+    let score = 0;
+    let currentWord;
+    let startTime;
+    const game = document.getElementById('game');
+    const player = document.getElementById('player');
+    const wordInput = document.getElementById('word-input');
+    const typedWord = document.getElementById('typed-word');
+    const submitWord = document.getElementById('submit-word');
+    const scoreDisplay = document.getElementById('score');
+    let playerX = 10;
+    let playerY = game.offsetHeight - 50;
+    const speed = 5;
+
+    function placeWord() {
+      const word = document.createElement('div');
+      word.textContent = words[Math.floor(Math.random() * words.length)];
+      word.className = 'absolute text-2xl';
+      word.style.left = `${game.offsetWidth + 10}px`;
+      word.style.top = `${Math.random() * (game.offsetHeight - 50)}px`;
+      game.appendChild(word);
+      return word;
+    }
+
+    function checkCollision(word) {
+      const playerRect = player.getBoundingClientRect();
+      const wordRect = word.getBoundingClientRect();
+      return !(
+        playerRect.right < wordRect.left ||
+        playerRect.left > wordRect.right ||
+        playerRect.bottom < wordRect.top ||
+        playerRect.top > wordRect.bottom
+      );
+    }
+
+    function startInput(word) {
+      currentWord = word.textContent;
+      wordInput.style.display = 'block';
+      typedWord.value = '';
+      typedWord.focus();
+      startTime = Date.now();
+    }
+
+    function endInput() {
+      wordInput.style.display = 'none';
+      const endTime = Date.now();
+      const elapsedTime = endTime - startTime;
+      const timeBonus = Math.max(2000 - elapsedTime, 0);
+      score += Math.round(1000 + timeBonus);
+      scoreDisplay.textContent = score;
+    }
+
+    function checkInput() {
+      if (typedWord.value === currentWord) {
+        endInput();
+      }
+    }
+
+    function gameLoop() {
+      playerY = Math.max(
+        0,
+        Math.min(playerY, game.offsetHeight - player.offsetHeight)
+      );
+      playerX = Math.max(
+        0,
+        Math.min(playerX, game.offsetWidth - player.offsetWidth)
+      );
+      player.style.top = `${playerY}px`;
+      player.style.left = `${playerX}px`;
+      const words = Array.from(
+        document.querySelectorAll('#game > div:not(#player)')
+      );
+      words.forEach((word) => {
+        const currentLeft = parseInt(word.style.left);
+        word.style.left = `${currentLeft - speed}px`;
+        if (checkCollision(word)) {
+          startInput(word);
+        }
+        if (currentLeft < -word.offsetWidth) {
+          word.remove();
+        }
+      });
+      if (Math.random() < 0.01) {
+        placeWord();
+      }
+      requestAnimationFrame(gameLoop);
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'w') playerY -= speed;
+      if (e.key === 'a') playerX -= speed;
+      if (e.key === 's') playerY += speed;
+      if (e.key === 'd') playerX += speed;
+    });
+    typedWord.addEventListener('input', checkInput);
+    submitWord.addEventListener('click', checkInput);
+    gameLoop();
+  </script>
+</body>
+
+</html>
